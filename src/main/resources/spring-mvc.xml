@@ -1,0 +1,229 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:cache="http://www.springframework.org/schema/cache"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/cache
+        http://www.springframework.org/schema/cache/spring-cache.xsd">
+
+    <!--通过扫描基类，注册注解器-->
+    <context:component-scan base-package="com.msunsoft.rmtdx">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Service"/>
+    </context:component-scan>
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/pages/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+    <!--映射路径忽略大小写-->
+    <bean id="caseSensitivePathMatcher" class="org.springframework.util.AntPathMatcher">
+        <property name="caseSensitive">
+            <value>false</value>
+        </property>
+    </bean>
+    <!--开启注解驱动-->
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+            <!--返回String,不多加引号-->
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <constructor-arg value="UTF-8"/>
+            </bean>
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>text/plain;charset=UTF-8</value>
+                        <value>application/json;charset=UTF-8</value>
+                    </list>
+                </property>
+                <property name="objectMapper">
+                    <!--spring返回json格式数据时，自定义映射类-->
+                    <bean class="com.msunsoft.rmtdx.util.ObjectMappingCustomer"/>
+                </property>
+            </bean>
+        </mvc:message-converters>
+        <!--映射路径忽略大小写-->
+        <mvc:path-matching path-matcher="caseSensitivePathMatcher"/>
+
+    </mvc:annotation-driven>
+
+    <!--注册拦截器-->
+    <mvc:interceptors>
+        <!-- 使用bean定义一个Interceptor，直接定义在mvc:interceptors根下面的Interceptor将拦截所有的请求 -->
+        <bean class="com.msunsoft.rmtdx.interceptor.PerfInfoHandlerInterceptor"/>
+        <!--
+        <controller:interceptor>
+            <controller:mapping path="/test/number.do"/>
+            定义在mvc:interceptor下面的表示是对特定的请求才进行拦截的
+            <bean class="com.host.app.web.interceptor.LoginInterceptor"/>
+        </controller:interceptor>
+        -->
+    </mvc:interceptors>
+    <!--start 数据源配置-->
+    <bean id="propertyConfigurer"
+          class="com.msunsoft.rmtdx.security.EncryptPropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:db.config.properties</value>
+                <value>classpath:his.db.config.properties</value>
+            </list>
+        </property>
+    </bean>
+    <!--start PACS数据源-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+          init-method="init" destroy-method="close">
+        <!-- 基本属性 url、user、password -->
+        <property name="url" value="${pacs.url}"/>
+        <property name="username" value="${pacs.username}"/>
+        <property name="password" value="${pacs.password}"/>
+        <property name="connectionProperties" value="${pacs.driverClassName}"></property>
+
+        <!-- 配置初始化大小、最小、最大 -->
+        <property name="initialSize" value="1"/>
+        <property name="minIdle" value="1"/>
+        <property name="maxActive" value="20"/>
+
+        <!-- 配置获取连接等待超时的时间 -->
+        <property name="maxWait" value="60000"/>
+
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="60000"/>
+
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="300000"/>
+
+        <property name="validationQuery" value="SELECT 'x'"/>
+        <property name="testWhileIdle" value="true"/>
+        <property name="testOnBorrow" value="false"/>
+        <property name="testOnReturn" value="false"/>
+
+        <!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+        <property name="poolPreparedStatements" value="true"/>
+        <property name="maxPoolPreparedStatementPerConnectionSize"
+                  value="20"/>
+
+        <!-- 配置监控统计拦截的filters -->
+        <property name="filters" value="stat"/>
+    </bean>
+    <!--end PACS数据源-->
+
+    <!--start HIS数据源 -->
+    <bean id="hisDataSource" class="com.alibaba.druid.pool.DruidDataSource"
+          init-method="init" destroy-method="close">
+        <!-- 基本属性 url、user、password -->
+        <property name="url" value="${his.url}"/>
+        <property name="username" value="${his.username}"/>
+        <property name="password" value="${his.password}"/>
+        <property name="connectionProperties" value="${his.driverClassName}"></property>
+
+        <!-- 配置初始化大小、最小、最大 -->
+        <property name="initialSize" value="1"/>
+        <property name="minIdle" value="1"/>
+        <property name="maxActive" value="20"/>
+
+        <!-- 配置获取连接等待超时的时间 -->
+        <property name="maxWait" value="60000"/>
+
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="60000"/>
+
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="300000"/>
+
+        <property name="validationQuery" value="SELECT 'x'"/>
+        <property name="testWhileIdle" value="true"/>
+        <property name="testOnBorrow" value="false"/>
+        <property name="testOnReturn" value="false"/>
+
+        <!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+        <property name="poolPreparedStatements" value="true"/>
+        <property name="maxPoolPreparedStatementPerConnectionSize"
+                  value="20"/>
+
+        <!-- 配置监控统计拦截的filters -->
+        <property name="filters" value="stat"/>
+    </bean>
+    <!--end HIS数据源 -->
+
+    <!--start 动态数据源配置-->
+    <bean id="dynamicDataSource" class="com.msunsoft.rmtdx.datasource.DynamicDataSource">
+        <property name="defaultTargetDataSource" ref="dataSource"/>
+        <property name="targetDataSources">
+            <map>
+                <entry key="pacsDataSource" value-ref="dataSource"/>
+                <entry key="hisDataSource" value-ref="hisDataSource"/>
+            </map>
+        </property>
+    </bean>
+    <!--end 动态数据源配置-->
+
+    <!--start 事务配置 -->
+    <!-- 采用jdbc事务管理器 -->
+    <bean id="transactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dynamicDataSource"/>
+
+    </bean>
+
+    <!-- 全注解方式   需加上@Transactional -->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+    <!--end 事务配置 -->
+
+    <!-- 打开aop 注解 -->
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+
+
+    <!--start mybatis配置sqlSessionFactory -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dynamicDataSource"/>
+        <property name="typeAliasesPackage" value="com.msunsoft.rmtdx.model"/>
+        <property name="configLocation" value="classpath:mybatis.config.xml"/>
+        <property name="mapperLocations" value="classpath*:mapper/${pacsdb.type}/*.xml"/>
+    </bean>
+
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <property name="basePackage" value="com.msunsoft.rmtdx.mapper"/>
+    </bean>
+    <!--end mybatis配置sqlSessionFactory -->
+
+    <!--start 缓存配置-->
+    <!--<cache:annotation-driven cache-manager="cacheManager" key-generator="keyGenerator" />-->
+    <!--&lt;!&ndash; 自定义cache主键生成策略 &ndash;&gt;-->
+    <!--<bean id="keyGenerator" class="com.msunsoft.rmtdx.util.KeyGenUtil" />-->
+    <cache:annotation-driven cache-manager="cacheManager"/>
+    <bean id="cacheManagerFactory" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+        <property name="configLocation" value="classpath:ehcache.xml"/>
+    </bean>
+    <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">
+        <property name="cacheManager" ref="cacheManagerFactory"/>
+    </bean>
+    <!--end  缓存配置-->
+
+    <!--start 全局异常设置-->
+    <bean class="com.msunsoft.rmtdx.exception.GlobalExceptionResolver"/>
+    <!--end 全局异常设置-->
+
+    <!--start 配置静态资源可以访问-->
+    <mvc:resources mapping="/common/**" location="/common/" cache-period="3600"/>
+    <mvc:resources mapping="/css/**" location="/css/" cache-period="3600"/>
+    <mvc:resources mapping="/js/**" location="/js/" cache-period="3600"/>
+    <mvc:resources mapping="/plugins/**" location="/plugins/" cache-period="3600"/>
+    <mvc:resources mapping="/images/**" location="/images/" cache-period="86400"/>
+    <mvc:resources mapping="/grf/**" location="/grf/" cache-period="86400"/>
+    <mvc:resources mapping="/Cab/**" location="/Cab/" cache-period="86400"/>
+    <mvc:resources mapping="/Document/**" location="/Document/" cache-period="86400"/>
+    <mvc:resources mapping="/ButtonImage/**" location="/ButtonImage/" cache-period="86400"/>
+    <!--end 配置静态资源可以访问-->
+</beans>

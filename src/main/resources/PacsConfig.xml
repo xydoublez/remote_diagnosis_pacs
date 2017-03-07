@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appSettings>
+        <!--ZYPACS程序所在IP -->
+        <add key="pacsappip" value="10.68.4.29:81"/>
+        <!--fs通信端口-->
+        <add key="PACS_SERVER_PORT" value="10000"/>
+        <!--his程序所在IP -->
+        <add key="hisappip" value="10.68.4.11"/>
+        <!--emr程序所在IP -->
+        <add key="emrappip" value="10.68.4.11"/>
+        <!--lis程序所在IP -->
+        <add key="lisappip" value="10.68.4.11"/>
+        <!--lis虚拟目录-->
+        <add key="lispath" value="LIS"/>
+        <!--区域模式 1，沂南；区域模式 2，兖州 -->
+        <add key="AreaModel" value="1"/>
+        <!--4.当前大部分客户在用的版本；5.新版浏览器所用版本-->
+        <add key="MedicalViewerXml" value="5"/>
+        <!--PacswebService地址-->
+        <add key="PacsServiceUrl" value="http://10.68.4.29/PacsService/PacsService.svc"/>
+        <!--HIS卡支付接口-->
+        <add key="HisServiceCardPayUrl" value="http://10.68.4.29/HISWebService/CardPay/ServiceCardPay.svc"/>
+        <!--HIS费用医嘱接口-->
+        <add key="HisLabServiceUrl" value="http://10.68.4.29/HISWebService/LabInterface/LABService.svc"  />
+        <!--HIS叫号接口-->
+        <add key="HisOutCallUrl" value="http://10.68.4.29/HISWebService/OutCall/OutCall.svc" />
+        <!--医信接口-->
+        <add key="MobileUrl" value="http://10.68.4.29/MobileBackstage/webService/docWorkDynamicWebService"/>
+        <!--是否上新体检系统0没上1上了-->
+        <add key="IsOpenTj" value="1"/>
+        <!--新体检接口-->
+        <add key="TjServiceUrl" value="http://10.68.2.31:8080/zytj/webservice/checkItemResult"/>
+        <!--获取采集图片站点地址，采集图片站点为.net程序-->
+        <add key="DcmGetImageSite" value="http://localhost/DcmGetImage" />
+
+    </appSettings>
+</configuration>
